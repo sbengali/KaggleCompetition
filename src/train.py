@@ -5,8 +5,12 @@ import numpy as np
 from sklearn.cross_validation import KFold
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_selection import chi2, SelectPercentile
 from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from filterstring import filterstring
 
 class ExtractRecipe():
     """ 
@@ -84,7 +88,7 @@ def transformString(s):
 	return ', '.join([''.join(y.lower() for y in x if y.isalnum()) for x in s.split(',')])
 
 linear_svc_pipe = Pipeline([
-    ('tfidf', TfidfVectorizer(strip_accents='unicode',analyzer="char",preprocessor=transformString)),
+	('count', TfidfVectorizer(strip_accents='unicode',analyzer="char",preprocessor=filterstring)),
     ('feat', SelectPercentile(chi2)),
     ('model', LinearSVC())
 ])
@@ -133,3 +137,5 @@ def main():
 	cv = KFold(train.shape[0], n_folds=8, shuffle=True)
 	
 	trainLinearSVC(linear_svc_pipe, linear_svc_grid, train.ingredients, train.cuisine, cv)
+	
+main()
