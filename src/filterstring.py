@@ -1,5 +1,9 @@
 # Function to remove unnecessary parts of input recipe data
 def filterstring(str):
+    str = ','.join([filterstring_helper( x ) for x in str.split(',')])
+    return str
+
+def filterstring_helper(str):
     brands_list = ['adobo', 'azteca', 'bertolli', 'bestfood', 'bettycrocker', 'bisquick', 'bragg', 'breakstones',
                    'breyers', 'campbells', 'cavenders', 'cholula', 'classico', 'colmans', 'coxs', 'crisco',
                    'crystalfarms', 'curryguy', 'delallo', 'diamondcrystal', 'earthbalance', 'estancia',
