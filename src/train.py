@@ -1,7 +1,9 @@
 #!/usr/local/bin/python
 
-import pandas as pd
+import codecs
 import numpy as np
+import pandas as pd
+import re
 from sklearn.cross_validation import KFold
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,7 +12,6 @@ from sklearn.feature_selection import chi2, SelectPercentile
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
-from filterstring import filterstring
 
 class ExtractRecipe():
     """ 
@@ -51,8 +52,23 @@ class ExtractRecipe():
     	"""
     	Method that returns a cleaned up version of the entered ingredient.
     	"""
-    	from re import sub
-    	return sub('[^A-Za-z0-9]+', ' ', s)
+    	# replace unicode character with the closest ascii representation
+    	from unidecode import unidecode
+    	s = unidecode(s)
+    	# remove parentheses and enclosed strings, e.g., "(14 oz.)"
+    	s = re.sub(r'\([^)]*\)', '', s)
+    	# remove punctuations, such as semicolons and commas
+    	s = re.sub('[^A-Za-z0-9]+', '', s)
+    	# use nltk POS tagger to find the nouns
+    	import nltk
+    	processed = list()
+    	tokens = nltk.word_tokenize(s)
+    	tagged = nltk.pos_tag(tokens)
+    	for item in tagged:
+    		if item[1][0] == 'N':
+    			processed.append(item[0])
+    	s = ''.join(processed)
+    	return s
     def get_train(self):
         """
         Method that returns a dictionary of data for the training set.
@@ -79,7 +95,7 @@ def loadTrainSet(dir='../input/train.json'):
 	import json
 	from pandas import DataFrame, Series
 	from sklearn.preprocessing import LabelEncoder
-	X = DataFrame([ExtractRecipe(x).get_train() for x in json.load(open(dir,'rb'))])
+	X = DataFrame([ExtractRecipe(x).get_train() for x in json.load(codecs.open(dir, 'r', encoding='utf-8'))])
 	encoder = LabelEncoder()
 	X['cuisine'] = encoder.fit_transform(X['cuisine'])
 	return X, encoder
@@ -88,14 +104,14 @@ def transformString(s):
 	return ', '.join([''.join(y.lower() for y in x if y.isalnum()) for x in s.split(',')])
 
 linear_svc_pipe = Pipeline([
-	('count', TfidfVectorizer(strip_accents='unicode',analyzer="char",preprocessor=filterstring)),
+	('tfidf', TfidfVectorizer(strip_accents='unicode',analyzer="char",preprocessor=transformString)),
     ('feat', SelectPercentile(chi2)),
-    ('model', LinearSVC())
+    ('model', LogisticRegression())
 ])
 
 linear_svc_grid = {
-    'tfidf__ngram_range':[(1,1)],
-    'feat__percentile':[95,90,85],
+    'tfidf__ngram_range':[(3,5)],
+    'feat__percentile':[90],
     'model__C':[1]
 }
 
