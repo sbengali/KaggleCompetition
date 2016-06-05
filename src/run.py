@@ -10,7 +10,8 @@ if __name__ == '__main__':
 
     test = tr.loadTestSet()
     test['cuisine'] = train_model.predict(test.ingredients)
-    print test['cuisine']
+    test['cuisine'] = encoder.inverse_transform(test['cuisine'])
+    #print test['cuisine']
     test[['id', 'cuisine']].to_csv("../output/prediction.csv", index=False)
 
 
