@@ -8,6 +8,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import chi2, SelectPercentile, f_classif
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
@@ -16,6 +17,7 @@ from sklearn.feature_selection import chi2, SelectPercentile
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
 
 class ExtractRecipe():
     """ 
@@ -120,6 +122,10 @@ def fitModel(X, y, cv, i, model):
     model.fit(X.iloc[tr], y.iloc[tr])
     pred = model.predict(X.iloc[vl])
     score = accuracy_score(y.iloc[vl], pred)
+    cm = confusion_matrix(y.iloc[vl], pred)
+    plt.figure()
+    plot_confusion_matrix(cm)
+    plt.show()
     return {"score": score}
 
 # Called by main method in run.py
@@ -149,7 +155,15 @@ def trainModel(model, train, target, cv, refit=True, n_jobs=-1):
     return model
 
 
-
-	
+def plot_confusion_matrix(cm, title='Confusion matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    #tick_marks = np.arange(len(iris.target_names))
+    #plt.xticks(tick_marks, iris.target_names, rotation=45)
+    #plt.yticks(tick_marks, iris.target_names)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
 
 
